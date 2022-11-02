@@ -6,4 +6,10 @@ plugins:
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: kubesecondarydns
 repo: github.com/AlonaKaplan/kubesecondarydns
+resources:
+- controller: true
+  domain: kubevirt.io
+  group: kubevirt.io
+  kind: VirtualMachineInstance
+  version: v1
 version: "3"
