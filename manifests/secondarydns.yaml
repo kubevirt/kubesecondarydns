@@ -97,7 +97,7 @@ spec:
           mountPath: /zones     
           readOnly: true
       - name: status-monitor
-        image: controller:latest
+        image: quay.io/alonapaz/kubesecondarydns/controller:latest
         volumeMounts:
         - name: secdns-zones
           mountPath: /zones
