@@ -45,7 +45,13 @@ roleRef:
   name: secondary
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: secondary
+  namespace: secondary
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: secondary
   namespace: secondary
 ---
 apiVersion: apps/v1
@@ -65,6 +71,7 @@ spec:
       labels:
         k8s-app: secondary-dns
     spec:
+      serviceAccountName: secondary
       containers:
       - args:
         - -conf
@@ -89,12 +96,8 @@ spec:
         - name: secdns-zones
           mountPath: /zones     
           readOnly: true
-      - name: fedora
-        image: fedora:latest
-        command:
-        - /bin/bash
-        - -c
-        - sleep infinity
+      - name: status-monitor
+        image: quay.io/alonapaz/kubesecondarydns/controller:latest
         volumeMounts:
         - name: secdns-zones
           mountPath: /zones

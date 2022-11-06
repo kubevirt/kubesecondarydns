@@ -18,34 +18,25 @@ package controllers
 
 import (
 	"context"
+	"github.com/go-logr/logr"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	v1 "kubevirt.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // VirtualMachineInstanceReconciler reconciles a VirtualMachineInstance object
 type VirtualMachineInstanceReconciler struct {
 	client.Client
+	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=kubevirt.io.kubevirt.io,resources=virtualmachineinstances,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kubevirt.io.kubevirt.io,resources=virtualmachineinstances/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kubevirt.io.kubevirt.io,resources=virtualmachineinstances/finalizers,verbs=update
-
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the VirtualMachineInstance object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *VirtualMachineInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	r.Log.Info("In reconcile loop")
 
 	// TODO(user): your logic here
 
@@ -54,8 +45,22 @@ func (r *VirtualMachineInstanceReconciler) Reconcile(ctx context.Context, req ct
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *VirtualMachineInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	onIpChange := predicate.Funcs{
+		CreateFunc: func(createEvent event.CreateEvent) bool {
+			return true
+		},
+		DeleteFunc: func(event.DeleteEvent) bool {
+			return true
+		},
+		UpdateFunc: func(event.UpdateEvent) bool {
+			return true // Alona TODO return true only if and interface/ip was added/removed/changed
+		},
+		GenericFunc: func(event.GenericEvent) bool {
+			return false
+		},
+	}
 	return ctrl.NewControllerManagedBy(mgr).
-		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
-		// For().
+		For(&v1.VirtualMachineInstance{}).
+		WithEventFilter(onIpChange).
 		Complete(r)
 }
