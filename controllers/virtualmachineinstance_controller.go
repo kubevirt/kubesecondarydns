@@ -18,14 +18,15 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	v1 "kubevirt.io/api/core/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // VirtualMachineInstanceReconciler reconciles a VirtualMachineInstance object
@@ -33,27 +34,31 @@ type VirtualMachineInstanceReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+	// TODO ZoneManager zoneManager
 }
 
-func (r *VirtualMachineInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	r.Log.Info("In reconcile loop")
-
-	// TODO(user): your logic here
+func (r *VirtualMachineInstanceReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
+	vmi := &v1.VirtualMachineInstance{}
+	err := r.Client.Get(context.TODO(), request.NamespacedName, vmi)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	// TODO zoneManager.updateVMI(vmi)
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *VirtualMachineInstanceReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	onIpChange := predicate.Funcs{
+	onVMIEvent := predicate.Funcs{
 		CreateFunc: func(createEvent event.CreateEvent) bool {
 			return true
 		},
 		DeleteFunc: func(event.DeleteEvent) bool {
 			return true
 		},
-		UpdateFunc: func(event.UpdateEvent) bool {
-			return true // Alona TODO return true only if and interface/ip was added/removed/changed
+		UpdateFunc: func(updateEvent event.UpdateEvent) bool {
+			return true
 		},
 		GenericFunc: func(event.GenericEvent) bool {
 			return false
@@ -61,6 +66,6 @@ func (r *VirtualMachineInstanceReconciler) SetupWithManager(mgr ctrl.Manager) er
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.VirtualMachineInstance{}).
-		WithEventFilter(onIpChange).
+		WithEventFilter(onVMIEvent).
 		Complete(r)
 }

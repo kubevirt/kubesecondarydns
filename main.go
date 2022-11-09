@@ -66,10 +66,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// TODO zoneManager := manager.New()
 	if err = (&controllers.VirtualMachineInstanceReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("VirtualMachineInstance"),
 		Scheme: mgr.GetScheme(),
+		// TODO ZoneMananger: zoneManager
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachineInstance")
 		os.Exit(1)
