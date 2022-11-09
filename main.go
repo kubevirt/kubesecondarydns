@@ -17,8 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/AlonaKaplan/kubesecondarydns/controllers"
 
@@ -27,6 +29,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -66,6 +70,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	waitForKubevirt()
+
 	// TODO zoneManager := manager.New()
 	if err = (&controllers.VirtualMachineInstanceReconciler{
 		Client: mgr.GetClient(),
@@ -82,5 +88,29 @@ func main() {
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
+	}
+}
+
+func checkForKubevirt(kubeClient *kubernetes.Clientset) error {
+	result := kubeClient.ExtensionsV1beta1().RESTClient().Get().RequestURI("/apis/apiextensions.k8s.io/v1/customresourcedefinitions/virtualmachineinstances.kubevirt.io").Do(context.TODO())
+	return result.Error()
+}
+
+// Check for Kubevirt CRD to be available
+func waitForKubevirt() {
+	clientset, err := kubernetes.NewForConfig(ctrl.GetConfigOrDie())
+	if err != nil {
+		setupLog.Error(err, "unable to create a kubernetes client error")
+		os.Exit(1)
+	}
+	for _ = range time.Tick(5 * time.Second) {
+		err := checkForKubevirt(clientset)
+		if err != nil {
+			setupLog.Info("kubevirt doesn't exist in the cluster", "err", err)
+		}
+		if err == nil {
+			setupLog.Info("kubevirt exists in the cluster")
+			break
+		}
 	}
 }
