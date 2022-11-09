@@ -29,12 +29,6 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
-    - uses: arnested/go-version-action@v1
-      id: go-version
-    - name: Set up Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: ${{ steps.go-version.outputs.minimal }}
     - name: Build cmd
       run: make build
   unit-test:
@@ -42,11 +36,5 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
-    - uses: arnested/go-version-action@v1
-      id: go-version
-    - name: Set up Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: ${{ steps.go-version.outputs.minimal }}
     - name: Run unit tests
       run: make test
