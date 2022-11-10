@@ -43,7 +43,3 @@ jobs:
         go-version: ${{ steps.go-version.outputs.minimal }}
     - name: Run unit tests
       run: make test
-  dco:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: tisonkun/actions-dco@v1.1
