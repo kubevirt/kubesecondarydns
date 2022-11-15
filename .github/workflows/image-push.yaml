@@ -1,0 +1,57 @@
+name: Push container image
+on: 
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+env:
+  image-push-owner: 'AlonaKaplan'
+jobs:
+  push-amd64:
+    name: Image push/amd64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Container Registry
+        if: github.repository_owner == 'AlonaKaplan'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push latest container image
+        if: github.repository_owner == 'AlonaKaplan'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
+          file: Dockerfile
+
+      - name: Push tagged container image
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{  github.ref_name }}
+          file: Dockerfile
+
+      - name: Update release manifests
+        if: startsWith(github.ref, 'refs/tags/')
+        run: IMAGE=ghcr.io/${{ github.repository }}:${{  github.ref_name }} hack/update-manifest.sh
+
+      - name: Release the kraken
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true
+          files: |
+            manifests/secondarydns.yaml
