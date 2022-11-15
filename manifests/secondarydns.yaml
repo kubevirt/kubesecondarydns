@@ -6,8 +6,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  USER_DOMAIN: secondary.io
-  DOMAIN_HOST_IP: 127.0.0.1
+  DOMAIN: secondary.io
+  NAME_SERVER_IP: 127.0.0.1
   Corefile: |
     .:53 {
         auto {
@@ -103,16 +103,16 @@ spec:
         - name: secdns-zones
           mountPath: /zones
         env:
-          - name: USER_DOMAIN
+          - name: DOMAIN
             valueFrom:
               configMapKeyRef:
                 name: secondary-dns
-                key: USER_DOMAIN
-          - name: DOMAIN_HOST_IP
+                key: DOMAIN
+          - name: NAME_SERVER_IP
             valueFrom:
               configMapKeyRef:
                 name: secondary-dns
-                key: DOMAIN_HOST_IP
+                key: NAME_SERVER_IP
       priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 1
