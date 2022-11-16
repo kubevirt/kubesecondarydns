@@ -27,7 +27,7 @@ func NewZoneManager() *ZoneManager {
 	return zoneMgr
 }
 
-func (zoneMgr *ZoneManager) init() (err error) {
+func (zoneMgr *ZoneManager) init() {
 
 	fmt.Println("================ inside ZoneManager.init ===============")
 
@@ -49,7 +49,6 @@ func (zoneMgr *ZoneManager) init() (err error) {
 
 	zoneMgr.zoneFileDns = NewDnsZoneFile(zoneFileName)
 	// todo return zoneFileDns.writeFile(zoneFileCopy.content) // is it necessary to create an empty zone file on load??
-	return nil
 }
 
 func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) (err error) {
