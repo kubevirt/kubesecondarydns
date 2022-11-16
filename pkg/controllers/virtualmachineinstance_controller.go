@@ -20,32 +20,43 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	v1 "kubevirt.io/api/core/v1"
+
+	"github.com/AlonaKaplan/kubesecondarydns/pkg/zonemgr"
 )
 
 // VirtualMachineInstanceReconciler reconciles a VirtualMachineInstance object
 type VirtualMachineInstanceReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
-	// TODO ZoneManager zoneManager
+	Log         logr.Logger
+	Scheme      *runtime.Scheme
+	ZoneManager *zonemgr.ZoneManager
 }
 
 func (r *VirtualMachineInstanceReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	vmi := &v1.VirtualMachineInstance{}
 	err := r.Client.Get(context.TODO(), request.NamespacedName, vmi)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			err = r.ZoneManager.UpdateZone(request.NamespacedName, nil)
+			return ctrl.Result{}, err
+		}
+		r.Log.Error(err, "Error retrieving VMI")
+		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
 	}
-	// TODO zoneManager.updateVMI(vmi)
+	err = r.ZoneManager.UpdateZone(request.NamespacedName, FilterMultusNonDefaultInterfaces(vmi.Status.Interfaces, vmi.Spec.Networks))
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.

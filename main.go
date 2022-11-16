@@ -18,21 +18,22 @@ package main
 
 import (
 	"flag"
-	"github.com/AlonaKaplan/kubesecondarydns/pkg/controllers"
 	"os"
-
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	v1 "kubevirt.io/api/core/v1"
-	//+kubebuilder:scaffold:imports
+
+	"github.com/AlonaKaplan/kubesecondarydns/pkg/controllers"
+	"github.com/AlonaKaplan/kubesecondarydns/pkg/zonemgr"
 )
 
 var (
@@ -65,12 +66,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO zoneManager := manager.New()
+	zoneManager := zonemgr.NewZoneManager()
 	if err = (&controllers.VirtualMachineInstanceReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("VirtualMachineInstance"),
-		Scheme: mgr.GetScheme(),
-		// TODO ZoneMananger: zoneManager
+		Client:      mgr.GetClient(),
+		Log:         ctrl.Log.WithName("controllers").WithName("VirtualMachineInstance"),
+		Scheme:      mgr.GetScheme(),
+		ZoneManager: zoneManager,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachineInstance")
 		os.Exit(1)
