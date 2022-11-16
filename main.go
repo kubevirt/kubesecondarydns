@@ -18,9 +18,8 @@ package main
 
 import (
 	"flag"
+	"github.com/AlonaKaplan/kubesecondarydns/pkg/controllers"
 	"os"
-
-	"github.com/AlonaKaplan/kubesecondarydns/controllers"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
