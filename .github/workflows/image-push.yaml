@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "git_commit_hash=$(git describe --no-match --always --abbrev=40 --dirty)" >> $GITHUB_ENV
 
-      - name: set lower case repository name
+      - name: Set lower case repository name
         run: |
           echo "REPOSITORY_LC=${REPOSITORY,,}" >>${GITHUB_ENV}
         env:
