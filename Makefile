@@ -20,9 +20,8 @@ $(GO):
 	hack/install-go.sh $(BIN_DIR) > /dev/null
 
 # Run unit tests
-# TODO
 test: $(GO)
-	echo hello world
+	$(GO) test ./pkg/... -coverprofile cover.out
 
 # Run e2e tests
 functest: $(GO)
