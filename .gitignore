@@ -1,2 +1,4 @@
 _kubevirtci/
 build/
+
+cover.out
