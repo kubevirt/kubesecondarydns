@@ -2,3 +2,6 @@ _kubevirtci/
 build/
 
 cover.out
+
+.idea/
+.vscode/
