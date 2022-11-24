@@ -51,3 +51,4 @@ pods_ready_wait() {
 }
 
 pods_ready_wait
+make create-nodeport

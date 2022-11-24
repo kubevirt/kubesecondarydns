@@ -60,6 +60,9 @@ cluster-sync:
 cluster-clean:
 	./cluster/clean.sh
 
+create-nodeport:
+	./hack/create-nodeport.sh
+
 bump-kubevirtci:
 	./hack/bump-kubevirtci.sh
 
@@ -80,6 +83,7 @@ vendor: $(GO)
 	cluster-down \
 	cluster-sync \
 	cluster-clean \
+	create-nodeport \
 	bump-kubevirtci \
 	vendor
 
