@@ -20,7 +20,7 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal
 WORKDIR /
 COPY --from=builder /workspace/manager .
 
-ARG git_url=https://github.com/AlonaKaplan/kubesecondarydns
+ARG git_url=https://github.com/kubevirt/kubesecondarydns
 ARG git_sha=NONE
 
 LABEL multi.GIT_URL=${git_url} \

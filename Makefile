@@ -1,5 +1,5 @@
 REGISTRY ?= ghcr.io
-REPO ?= alonakaplan
+REPO ?= kubevirt
 IMAGE_TAG ?= latest
 IMG ?= $(REPO)/kubesecondarydns
 OCI_BIN ?= $(shell if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)

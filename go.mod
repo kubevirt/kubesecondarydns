@@ -1,4 +1,4 @@
-module github.com/AlonaKaplan/kubesecondarydns
+module github.com/kubevirt/kubesecondarydns
 
 go 1.19
 
