@@ -100,7 +100,7 @@ spec:
           mountPath: /zones     
           readOnly: true
       - name: status-monitor
-        image: registry:5000/alonapaz/kubesecondarydns:latest
+        image: registry:5000/alonakaplan/kubesecondarydns:latest
         volumeMounts:
         - name: secdns-zones
           mountPath: /zones
