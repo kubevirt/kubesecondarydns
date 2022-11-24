@@ -4,6 +4,7 @@ IMAGE_TAG ?= latest
 IMG ?= $(REPO)/kubesecondarydns
 OCI_BIN ?= $(shell if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
 TLS_SETTING := $(if $(filter $(OCI_BIN),podman),--tls-verify=false,)
+SHA := $(shell git describe --no-match --always --abbrev=40 --dirty)
 
 BIN_DIR = $(CURDIR)/build/_output/bin/
 
@@ -39,7 +40,7 @@ vet: $(GO)
 	$(GO) vet ./...
 
 build:
-	${OCI_BIN} build -t ${REGISTRY}/${IMG}:${IMAGE_TAG} .
+	${OCI_BIN} build -t ${REGISTRY}/${IMG}:${IMAGE_TAG} --build-arg git_sha=$(SHA) .
 
 # Push the container image
 push:
