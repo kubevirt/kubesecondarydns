@@ -19,5 +19,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 FROM registry.access.redhat.com/ubi8/ubi-minimal
 WORKDIR /
 COPY --from=builder /workspace/manager .
+RUN microdnf install -y vi > /dev/null 2>&1 && microdnf clean all > /dev/null 2>&1
 
 ENTRYPOINT ["/manager"]
