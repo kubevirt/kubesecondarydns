@@ -1,5 +1,5 @@
-REGISTRY ?= quay.io
-REPO ?= alonapaz
+REGISTRY ?= ghcr.io
+REPO ?= alonakaplan
 IMAGE_TAG ?= latest
 IMG ?= $(REPO)/kubesecondarydns
 OCI_BIN ?= $(shell if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
