@@ -31,7 +31,7 @@ import (
 
 	v1 "kubevirt.io/api/core/v1"
 
-	"github.com/AlonaKaplan/kubesecondarydns/pkg/zonemgr"
+	"github.com/kubevirt/kubesecondarydns/pkg/zonemgr"
 )
 
 // VirtualMachineInstanceReconciler reconciles a VirtualMachineInstance object
