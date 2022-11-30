@@ -6,8 +6,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  DOMAIN: secondary.io
-  NAME_SERVER_IP: 127.0.0.1
+  DOMAIN: ""
+  NAME_SERVER_IP: ""
   Corefile: |
     .:53 {
         auto {
