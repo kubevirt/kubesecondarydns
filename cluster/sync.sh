@@ -51,4 +51,5 @@ pods_ready_wait() {
 }
 
 pods_ready_wait
+./cluster/kubectl.sh label node node01 node-role.kubernetes.io/worker=worker
 make create-nodeport
