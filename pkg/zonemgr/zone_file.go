@@ -2,8 +2,14 @@ package zonemgr
 
 import (
 	"fmt"
-	v1 "kubevirt.io/api/core/v1"
+	"reflect"
+	"sort"
 	"strconv"
+
+	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/net"
+
+	v1 "kubevirt.io/api/core/v1"
 )
 
 const (
@@ -11,17 +17,19 @@ const (
 	retry   = "3600"    // 1 hour (seconds) - how long a nameserver should wait prior to retrying to update a zone after a failed attempt.
 	expire  = "1209600" // 2 weeks (seconds) - how long a nameserver should wait prior to considering data from a secondary zone invalid and stop answering queries for that zone
 	ttl     = "3600"    // 1 hour (seconds) - the duration that the record may be cached by any resolver
+
+	domainDefault     = "vm"
+	nameServerDefault = "ns"
+	adminEmailDefault = "email"
 )
 
 type ZoneFile struct {
-	soaSerial          int
-	clusterName        string
-	userAdminEmail     string
-	userNameserverName string
-	userNameserverIP   string
-	userSubdomain      string
+	soaSerial      int
+	adminEmail     string
+	nameServerName string
+	nameServerIP   string
+	domain         string
 
-	domainName string
 	headerPref string
 	headerSuf  string
 
@@ -29,153 +37,104 @@ type ZoneFile struct {
 	aRecords string
 	content  string
 
-	vmiRecordsMap map[string]map[string]ARecord // key=vmi_name+namespace, value=map[key=iface_name, value=ip]
-	//ifacesMap map[string]string
+	vmiRecordsMap map[string][]string
 }
 
-func NewZoneFile(clusterName string, userAdminEmail string, userNameserverName string,
-	userNameserverIP string, userSubdomain string) *ZoneFile {
+func NewZoneFile(nameServerIP string, domain string) *ZoneFile {
 	return &ZoneFile{
-		clusterName:        clusterName,
-		userAdminEmail:     userAdminEmail,
-		userNameserverName: userNameserverName,
-		userNameserverIP:   userNameserverIP,
-		userSubdomain:      userSubdomain,
+		nameServerIP: nameServerIP,
+		domain:       domain,
 	}
 }
 
 func (zoneFile *ZoneFile) init() {
-	zoneFile.setDefaultValues()
-	//before SOA serial
+	zoneFile.initCustomFields()
 	zoneFile.generateHeaderPrefix()
-	//after SOA serial
 	zoneFile.generateHeaderSuffix()
-	zoneFile.soaSerial = 0 // TODO make default RANDOM: time.Now().UnixNano()
+	zoneFile.soaSerial = 0
 	zoneFile.header = zoneFile.generateHeader()
 	zoneFile.content = zoneFile.header
-	zoneFile.vmiRecordsMap = make(map[string]map[string]ARecord)
+	zoneFile.vmiRecordsMap = make(map[string][]string)
 }
 
-func (zoneFile *ZoneFile) setDefaultValues() {
-	zoneFile.domainName = fmt.Sprintf("%s.secondary", zoneFile.clusterName)
-
-	if zoneFile.userSubdomain != "" {
-		zoneFile.domainName = fmt.Sprintf("%s.%s", zoneFile.domainName, zoneFile.userSubdomain)
+func (zoneFile *ZoneFile) initCustomFields() {
+	if zoneFile.domain == "" {
+		zoneFile.domain = domainDefault
+	} else {
+		zoneFile.domain = fmt.Sprintf("%s.%s", domainDefault, zoneFile.domain)
 	}
-
-	if zoneFile.userNameserverName == "" {
-		zoneFile.userNameserverName = fmt.Sprintf("ns1.%s", zoneFile.domainName)
-	}
-	/*
-		if zoneFile.userNameserverIP == "" {
-			//TODO default???
-		}
-	*/
-	if zoneFile.userAdminEmail == "" {
-		zoneFile.userAdminEmail = fmt.Sprintf("admin.%s", zoneFile.domainName)
-	}
+	zoneFile.nameServerName = fmt.Sprintf("%s.%s", nameServerDefault, zoneFile.domain)
+	zoneFile.adminEmail = fmt.Sprintf("%s.%s", adminEmailDefault, zoneFile.domain)
 }
 
-/*
-$ORIGIN mycluster.secondary.mydomain.com
-$TTL 1750
-@       IN      SOA ns1.mycluster.secondary.mydomain.com admin@secdns.com (
-*/
 func (zoneFile *ZoneFile) generateHeaderPrefix() {
-	zoneFile.headerPref = fmt.Sprintf("\n$ORIGIN %s \n$TTL %s \n@ IN SOA %s %s (", zoneFile.domainName, ttl,
-		zoneFile.userNameserverName, zoneFile.userAdminEmail)
-
-	//fmt.Println("======= prefix:\n", zoneFile.headerPref)
-
+	zoneFile.headerPref = fmt.Sprintf("$ORIGIN %s. \n$TTL %s \n@ IN SOA %s. %s. (", zoneFile.domain, ttl,
+		zoneFile.nameServerName, zoneFile.adminEmail)
 }
 
-/*
-									7200       ; refresh (2 hours)
-	                                3600       ; retry (1 hour)
-	                                1209600    ; expire (2 weeks)
-	                                3600       ; minimum (1 hour)
-	                                )
-	        IN      NS  ns1.mycluster.secondary.mydomain.com
-	        IN      A   1.2.3.4
-*/
 func (zoneFile *ZoneFile) generateHeaderSuffix() {
 	zoneFile.headerSuf = fmt.Sprintf(" %s %s %s %s)\n", refresh, retry, expire, ttl)
 
-	if zoneFile.userNameserverName != "" {
-		zoneFile.headerSuf += fmt.Sprintf("IN NS %s\n", zoneFile.userNameserverName)
-	}
-
-	if zoneFile.userNameserverIP != "" {
-		zoneFile.headerSuf += fmt.Sprintf("IN A %s\n", zoneFile.userNameserverIP)
+	if zoneFile.nameServerIP != "" {
+		zoneFile.headerSuf += fmt.Sprintf("IN NS %s.\n", zoneFile.nameServerName)
+		zoneFile.headerSuf += fmt.Sprintf("IN A %s\n", zoneFile.nameServerIP)
 	}
 }
 
-func (zoneFile *ZoneFile) generateHeader() (header string) {
+func (zoneFile *ZoneFile) generateHeader() string {
 	return zoneFile.headerPref + strconv.Itoa(zoneFile.soaSerial) + zoneFile.headerSuf
 }
 
-//////////// maps impl
+func (zoneFile *ZoneFile) updateVMIRecords(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) bool {
+	key := fmt.Sprintf("%s_%s", namespacedName.Name, namespacedName.Namespace)
+	isUpdated := false
 
-func (zoneFile *ZoneFile) updateVMIRecords(vmiName string, vmiNamespace string, interfaces []v1.VirtualMachineInstanceNetworkInterface) (isUpdated bool, err error) {
-	key := fmt.Sprintf("%s_%s", vmiName, vmiNamespace)
-	isUpdated = false
-	//delete vmi records from the list
 	if interfaces == nil {
-		delete(zoneFile.vmiRecordsMap, key)
-		isUpdated = true
-	} else {
-		ifacesMap := zoneFile.vmiRecordsMap[key]
-		//if not exist or changed - override
-		if ifacesMap == nil || isIfaceListChanged(ifacesMap, interfaces) {
-			zoneFile.vmiRecordsMap[key] = buildInterfacesMap(vmiName, vmiNamespace, interfaces)
+		if zoneFile.vmiRecordsMap[key] != nil {
+			delete(zoneFile.vmiRecordsMap, key)
 			isUpdated = true
 		}
+	} else {
+		newRecords := buildARecordsArr(namespacedName.Name, namespacedName.Namespace, interfaces)
+		isUpdated = !reflect.DeepEqual(newRecords, zoneFile.vmiRecordsMap[key])
+		if isUpdated {
+			zoneFile.vmiRecordsMap[key] = newRecords
+		}
 	}
-
-	fmt.Println("********** zoneFile.vmiRecordsMap: ", zoneFile.vmiRecordsMap)
 
 	if isUpdated {
 		zoneFile.updateContent()
 	}
-	return isUpdated, nil
+	return isUpdated
 }
 
-type ARecord struct {
-	value string
-	ip    string
-}
-
-func isIfaceListChanged(ifacesMap map[string]ARecord, interfaces []v1.VirtualMachineInstanceNetworkInterface) (isChanged bool) {
-	if len(ifacesMap) != len(interfaces) {
-		return true
-	}
-
-	for _, newIface := range interfaces {
-		if ifacesMap[newIface.Name].ip != newIface.IP {
-			return true
+func buildARecordsArr(name string, namespace string, interfaces []v1.VirtualMachineInstanceNetworkInterface) []string {
+	var recordsArr []string
+	for _, iface := range interfaces {
+		if iface.Name != "" {
+			IPs := iface.IPs
+			for _, IP := range IPs {
+				if net.IsIPv4String(IP) {
+					recordsArr = append(recordsArr, generateARecord(name, namespace, iface.Name, IP))
+					break
+				}
+			}
 		}
 	}
-	return false
+	sort.Strings(recordsArr)
+	return recordsArr
 }
 
-func buildInterfacesMap(vmiName string, vmiNamespace string, interfaces []v1.VirtualMachineInstanceNetworkInterface) (ifaceMap map[string]ARecord) {
-	ifaceMap = make(map[string]ARecord)
-	for _, iface := range interfaces {
-		ifaceMap[iface.Name] = ARecord{value: generateARecord(vmiName, vmiNamespace, iface.Name, iface.IP), ip: iface.IP}
-	}
-	return ifaceMap
-}
-
-func generateARecord(vmiName string, vmiNamespace string, ifaceName string, ifaceIP string) (aRecord string) {
-	//iface1.ns1.vm1   IN      A           5.6.7.8
-	fqdn := fmt.Sprintf("%s.%s.%s", ifaceName, vmiNamespace, vmiName)
+func generateARecord(name string, namespace string, ifaceName string, ifaceIP string) string {
+	fqdn := fmt.Sprintf("%s.%s.%s", ifaceName, name, namespace)
 	return fmt.Sprintf("%s IN A %s\n", fqdn, ifaceIP)
 }
 
-func (zoneFile ZoneFile) generateARecords() (aRecords string) {
-	for _, ifaceMap := range zoneFile.vmiRecordsMap {
-		for _, aRecord := range ifaceMap {
-			aRecords += aRecord.value
+func (zoneFile ZoneFile) generateARecords() string {
+	aRecords := ""
+	for _, recordsArr := range zoneFile.vmiRecordsMap {
+		for _, aRecord := range recordsArr {
+			aRecords += aRecord
 		}
 	}
 	return aRecords

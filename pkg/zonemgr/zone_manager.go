@@ -1,13 +1,19 @@
 package zonemgr
 
 import (
-	"fmt"
-	k8stypes "k8s.io/apimachinery/pkg/types"
-	v1 "kubevirt.io/api/core/v1"
+	"errors"
 	"os"
+
+	k8stypes "k8s.io/apimachinery/pkg/types"
+
+	v1 "kubevirt.io/api/core/v1"
 )
 
-//todo error handling
+const (
+	zoneFileName       = "/zones/db."
+	envVarDomain       = "DOMAIN"
+	envVarNameServerIP = "NAME_SERVER_IP"
+)
 
 type SecIfaceData struct {
 	interfaceName string
@@ -17,8 +23,8 @@ type SecIfaceData struct {
 }
 
 type ZoneManager struct {
-	zoneFileCopy *ZoneFile
-	zoneFileDns  *DnsZoneFile
+	zoneFileCache *ZoneFile
+	zoneFileDns   *DnsZoneFile
 }
 
 func NewZoneManager() *ZoneManager {
@@ -28,52 +34,26 @@ func NewZoneManager() *ZoneManager {
 }
 
 func (zoneMgr *ZoneManager) init() {
+	domain := os.Getenv(envVarDomain)
+	nameServerIP := os.Getenv(envVarNameServerIP)
 
-	fmt.Println("================ inside ZoneManager.init ===============")
+	zoneMgr.zoneFileCache = NewZoneFile(nameServerIP, domain)
+	zoneMgr.zoneFileCache.init()
 
-	//todo fetch custom details
-	clusterName := "cluster"
-	zoneFileName := "/zones/db.secdns"
-
-	userAdminEmail := ""
-	userSubdomain := "domain.com"
-	userNameserverName := ""
-	userNameserverIP := ""
-
-	zoneMgr.zoneFileCopy = NewZoneFile(clusterName, userAdminEmail,
-		userNameserverName, userNameserverIP, userSubdomain)
-
-	zoneMgr.zoneFileCopy.init()
-
-	//fmt.Println("================ zoneMgr.zoneFileCopy.content ===============\n", zoneMgr.zoneFileCopy.content)
-
-	zoneMgr.zoneFileDns = NewDnsZoneFile(zoneFileName)
-	// todo return zoneFileDns.writeFile(zoneFileCopy.content) // is it necessary to create an empty zone file on load??
+	zoneMgr.zoneFileDns = NewDnsZoneFile(zoneFileName + zoneMgr.zoneFileCache.domain)
 }
 
-func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) (err error) {
-
-	//fmt.Println("================ inside ZoneManager.UpdateZone ===============")
-	//fmt.Println("================ namespacedName: ===============", namespacedName)
-	//fmt.Println("================ interfaces: ===============", interfaces)
-
-	isUpdated, err := zoneMgr.zoneFileCopy.updateVMIRecords(namespacedName.Name, namespacedName.Namespace, interfaces)
-	if err != nil {
-		return err
+func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) error {
+	if namespacedName.Name == "" {
+		return errors.New("VM name in empty")
+	}
+	if namespacedName.Namespace == "" {
+		return errors.New("VM namespace is empty")
 	}
 
-	//fmt.Println("================ zoneMgr.zoneFileCopy.content: ===============\n", zoneMgr.zoneFileCopy.content)
-	//fmt.Println("================ zoneMgr.zoneFileDns: ===============\n", zoneMgr.zoneFileDns)
-
-	//override on disk, create if not exist
-	if isUpdated {
-		err = zoneMgr.zoneFileDns.writeFile(zoneMgr.zoneFileCopy.content)
-		fmt.Println("********* err: ", err)
-
-		/////test
-		text, err := os.ReadFile("/zones/db.secdns")
-		fmt.Println("********* err: ", err)
-		fmt.Println("********* text: ", string(text))
+	if isUpdated := zoneMgr.zoneFileCache.updateVMIRecords(namespacedName, interfaces); isUpdated {
+		return zoneMgr.zoneFileDns.writeFile(zoneMgr.zoneFileCache.content)
 	}
-	return err
+
+	return nil
 }
