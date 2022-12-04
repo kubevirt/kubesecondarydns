@@ -97,7 +97,7 @@ spec:
           mountPath: /etc/coredns
           readOnly: true
         - name: secdns-zones
-          mountPath: /zones     
+          mountPath: /zones
           readOnly: true
       - name: status-monitor
         image: registry:5000/kubevirt/kubesecondarydns:latest
