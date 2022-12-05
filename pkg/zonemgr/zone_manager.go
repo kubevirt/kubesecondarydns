@@ -23,8 +23,8 @@ type SecIfaceData struct {
 }
 
 type ZoneManager struct {
-	zoneFileCache *ZoneFile
-	zoneFileDns   *DnsZoneFile
+	zoneFileCache *ZoneFileCache
+	zoneFile      *ZoneFile
 }
 
 func NewZoneManager() *ZoneManager {
@@ -37,10 +37,10 @@ func (zoneMgr *ZoneManager) init() {
 	domain := os.Getenv(envVarDomain)
 	nameServerIP := os.Getenv(envVarNameServerIP)
 
-	zoneMgr.zoneFileCache = NewZoneFile(nameServerIP, domain)
+	zoneMgr.zoneFileCache = NewZoneFileCache(nameServerIP, domain)
 	zoneMgr.zoneFileCache.init()
 
-	zoneMgr.zoneFileDns = NewDnsZoneFile(zoneFileName + zoneMgr.zoneFileCache.domain)
+	zoneMgr.zoneFile = NewZoneFile(zoneFileName + zoneMgr.zoneFileCache.domain)
 }
 
 func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) error {
@@ -52,7 +52,7 @@ func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, i
 	}
 
 	if isUpdated := zoneMgr.zoneFileCache.updateVMIRecords(namespacedName, interfaces); isUpdated {
-		return zoneMgr.zoneFileDns.writeFile(zoneMgr.zoneFileCache.content)
+		return zoneMgr.zoneFile.writeFile(zoneMgr.zoneFileCache.content)
 	}
 
 	return nil
