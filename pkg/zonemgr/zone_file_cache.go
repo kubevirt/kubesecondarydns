@@ -41,10 +41,12 @@ type ZoneFileCache struct {
 }
 
 func NewZoneFileCache(nameServerIP string, domain string) *ZoneFileCache {
-	return &ZoneFileCache{
+	zoneFileCache := &ZoneFileCache{
 		nameServerIP: nameServerIP,
 		domain:       domain,
 	}
+	zoneFileCache.init()
+	return zoneFileCache
 }
 
 func (zoneFileCache *ZoneFileCache) init() {

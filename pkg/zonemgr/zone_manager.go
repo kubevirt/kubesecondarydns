@@ -38,7 +38,6 @@ func (zoneMgr *ZoneManager) init() {
 	nameServerIP := os.Getenv(envVarNameServerIP)
 
 	zoneMgr.zoneFileCache = NewZoneFileCache(nameServerIP, domain)
-	zoneMgr.zoneFileCache.init()
 
 	zoneMgr.zoneFile = NewZoneFile(zoneFileName + zoneMgr.zoneFileCache.domain)
 }
