@@ -16,8 +16,8 @@
 
 set -ex pipefail
 
-export DEPLOY_CNAO=${DEPLOY_CNAO:-false}
-export DEPLOY_KUBEVIRT=${DEPLOY_KUBEVIRT:-false}
+export DEPLOY_CNAO=${DEPLOY_CNAO:-true}
+export DEPLOY_KUBEVIRT=${DEPLOY_KUBEVIRT:-true}
 
 function getLatestPatchVersion {
   local major_minors=$1

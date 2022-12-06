@@ -13,7 +13,7 @@
 # limitations under the License.
 
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.25'}
-export KUBEVIRT_NUM_NODES=2
+export KUBEVIRT_NUM_NODES=1
 export KUBEVIRTCI_TAG='2211212125-021efaa'
 
 KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
