@@ -45,11 +45,11 @@ func NewZoneFileCache(nameServerIP string, domain string) *ZoneFileCache {
 		nameServerIP: nameServerIP,
 		domain:       domain,
 	}
-	zoneFileCache.init()
+	zoneFileCache.prepare()
 	return zoneFileCache
 }
 
-func (zoneFileCache *ZoneFileCache) init() {
+func (zoneFileCache *ZoneFileCache) prepare() {
 	zoneFileCache.initCustomFields()
 	zoneFileCache.generateHeaderPrefix()
 	zoneFileCache.generateHeaderSuffix()

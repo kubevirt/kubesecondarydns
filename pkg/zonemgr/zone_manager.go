@@ -29,11 +29,11 @@ type ZoneManager struct {
 
 func NewZoneManager() *ZoneManager {
 	zoneMgr := &ZoneManager{}
-	zoneMgr.init()
+	zoneMgr.prepare()
 	return zoneMgr
 }
 
-func (zoneMgr *ZoneManager) init() {
+func (zoneMgr *ZoneManager) prepare() {
 	domain := os.Getenv(envVarDomain)
 	nameServerIP := os.Getenv(envVarNameServerIP)
 
