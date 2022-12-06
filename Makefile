@@ -67,6 +67,12 @@ create-nodeport:
 bump-kubevirtci:
 	./hack/bump-kubevirtci.sh
 
+whitespace:
+	./hack/whitespace.sh --fix
+
+whitespace-check:
+	./hack/whitespace.sh
+
 vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
@@ -86,5 +92,7 @@ vendor: $(GO)
 	cluster-clean \
 	create-nodeport \
 	bump-kubevirtci \
+	whitespace \
+	whitespace-check \
 	vendor
 
