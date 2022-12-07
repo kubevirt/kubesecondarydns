@@ -88,9 +88,12 @@ var _ = Describe("Virtual Machines Startup", func() {
 			var nslookupOutput []byte
 			Eventually(func() error {
 				var nslookupErr error
-				nslookupOutput, nslookupErr = exec.Command("nslookup", fmt.Sprintf("-port=%s", dnsPort), fmt.Sprintf("%s.%s.%s.%s", interfaceName, vmiName, testNamespace, domain), dnsIP).CombinedOutput()
+				nslookupOutput, nslookupErr = exec.Command("nslookup", fmt.Sprintf("-port=%s", dnsPort), fmt.Sprintf("%s.%s.%s.%s.", interfaceName, vmiName, testNamespace, domain), dnsIP).CombinedOutput()
+				if nslookupErr != nil {
+					nslookupErr = fmt.Errorf("err: %v, output: %s", nslookupErr, nslookupOutput)
+				}
 				return nslookupErr
-			}, time.Minute, pollingInterval).ShouldNot(HaveOccurred(), fmt.Sprintf("nslookup failed. Output - %s", nslookupOutput))
+			}, time.Minute, pollingInterval).ShouldNot(HaveOccurred(), "nslookup failed")
 
 			By("Comparing the VirtualMachineInstance IP to the nslookup result")
 			Expect(nslookupOutput).To(ContainSubstring(fmt.Sprintf("Address: %s\n", vmiIp)), fmt.Sprintf("nsloookup doesn't return the VMI IP address - %s. nslookup output - %s", vmiIp, nslookupOutput))
