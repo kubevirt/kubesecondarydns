@@ -1,10 +1,9 @@
 package zonemgr
 
 import (
+	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"fmt"
 	"sort"
 	"strings"
 
@@ -25,6 +24,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 		const (
 			headerDefault   = "$ORIGIN vm. \n$TTL 3600 \n@ IN SOA ns.vm. email.vm. (0 3600 3600 1209600 3600)\n"
 			headerCustomFmt = "$ORIGIN vm.%s. \n$TTL 3600 \n@ IN SOA ns.vm.%s. email.vm.%s. (0 3600 3600 1209600 3600)\nIN NS ns.vm.%s.\nns IN A %s\n"
+			headerSoaSerial = "$ORIGIN vm. \n$TTL 3600 \n@ IN SOA ns.vm. email.vm. (12345 3600 3600 1209600 3600)\n"
 		)
 
 		var (
@@ -32,12 +32,18 @@ var _ = Describe("cached zone file content maintenance", func() {
 		)
 
 		DescribeTable("generate zone file header", func(nameServerIP, domain, expectedHeader string) {
-			zoneFileCache = NewZoneFileCache(nameServerIP, domain)
+			zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
 			Expect(zoneFileCache.header).To(Equal(expectedHeader))
 		},
-			Entry("header should contain default values", "", "", headerDefault),
-			Entry("header should contain custom values", nameServerIP, domain, headerCustom),
+			Entry("header should contain default values", "", "vm", headerDefault),
+			Entry("header should contain custom values", nameServerIP, "vm."+domain, headerCustom),
 		)
+
+		It("should init header with existing SOA serial", func() {
+			soaSerial := 12345
+			zoneFileCache = NewZoneFileCache("", "vm", &soaSerial)
+			Expect(zoneFileCache.header).To(Equal(headerSoaSerial))
+		})
 	})
 
 	Describe("cached zone file records update", func() {
@@ -86,7 +92,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 
 		When("interfaces records list is empty", func() {
 			BeforeEach(func() {
-				zoneFileCache = NewZoneFileCache(nameServerIP, domain)
+				zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
 			})
 
 			DescribeTable("Updating interfaces records", validateUpdateFunc,
@@ -109,9 +115,19 @@ var _ = Describe("cached zone file content maintenance", func() {
 			)
 		})
 
+		When("SOA serial already exist", func() {
+			It("should init SOA serial with the existing value", func() {
+				soaSerial := 5
+				zoneFileCache = NewZoneFileCache("", "", &soaSerial)
+				zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
+					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}})
+				Expect(zoneFileCache.soaSerial).To(Equal(6))
+			})
+		})
+
 		When("interfaces records list contains single vmi", func() {
 			BeforeEach(func() {
-				zoneFileCache = NewZoneFileCache(nameServerIP, domain)
+				zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
 				isUpdated := zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}, {IPs: []string{nic2IP}, Name: nic2Name}})
 				Expect(isUpdated).To(BeTrue())
@@ -160,7 +176,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 
 		When("interfaces records list contains multiple vmis", func() {
 			BeforeEach(func() {
-				zoneFileCache = NewZoneFileCache(nameServerIP, domain)
+				zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
 				isUpdated := zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}, {IPs: []string{nic2IP}, Name: nic2Name}})
 				Expect(isUpdated).To(BeTrue())
@@ -219,7 +235,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 
 		When("interfaces records list contains vmi with multiple IPs", func() {
 			BeforeEach(func() {
-				zoneFileCache = NewZoneFileCache(nameServerIP, domain)
+				zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
 			})
 
 			DescribeTable("Updating interfaces records list", validateUpdateFunc,
