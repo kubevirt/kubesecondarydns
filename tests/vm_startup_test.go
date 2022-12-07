@@ -24,7 +24,7 @@ const pollingInterval = 5 * time.Second
 const testNamespacePrefix = "secondary-test"
 const dnsPort = "31111"
 const dnsIP = "127.0.0.1" // Forwarded to the node port - https://github.com/kubevirt/kubevirtci/pull/867
-const domain = "vm.secondary.io"
+const domain = "vm"
 
 var testNamespace string
 
