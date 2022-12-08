@@ -25,25 +25,25 @@ function getLatestPatchVersion {
 }
 
 source ./cluster/cluster.sh
-CNAO_VERSION=v0.76.1
 
 #use kubevirt latest z stream release
 KUBEVIRT_VERSION=$(getLatestPatchVersion v0.59)
 cluster::install
 
 if [[ "$KUBEVIRT_PROVIDER" != external ]]; then
+    if [[ "${DEPLOY_CNAO}" = "true" ]]; then
+        export KUBVIRT_WITH_CNAO_SKIP_CONFIG=true
+    fi
+    
     $(cluster::path)/cluster-up/up.sh
-fi
 
-if [[ "${DEPLOY_CNAO}" = "true" ]]; then
-    # Deploy CNAO
-    ./cluster/kubectl.sh create -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/${CNAO_VERSION}/namespace.yaml
-    ./cluster/kubectl.sh create -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/${CNAO_VERSION}/network-addons-config.crd.yaml
-    ./cluster/kubectl.sh create -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/${CNAO_VERSION}/operator.yaml
-    ./cluster/kubectl.sh create -f ./hack/cna/cna-cr.yaml
+    if [[ "${DEPLOY_CNAO}" = "true" ]]; then
+        # Deploy CNAO CR
+        ./cluster/kubectl.sh create -f ./hack/cna/cna-cr.yaml
 
-    # wait for cluster operator
-    ./cluster/kubectl.sh wait networkaddonsconfig cluster --for condition=Available --timeout=800s
+        # wait for cluster operator
+        ./cluster/kubectl.sh wait networkaddonsconfig cluster --for condition=Available --timeout=120s
+    fi
 fi
 
 if [[ "${DEPLOY_KUBEVIRT}" = "true" ]]; then
