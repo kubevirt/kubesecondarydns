@@ -52,6 +52,31 @@ var _ = Describe("FilterMultusNonDefaultInterfaces", func() {
 	})
 })
 
+var _ = Describe("FilterInterfacesWithNoName", func() {
+	It("when interfaces list is nil", func() {
+		Expect(FilterNamedInterfaces(nil)).To(BeEmpty())
+	})
+	It("when interface list is empty", func() {
+		Expect(FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{})).To(BeEmpty())
+	})
+	It("when there is one interface without a name", func() {
+		Expect(FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface("")})).To(BeEmpty())
+	})
+	It("when there is one inteface with a name", func() {
+		iface := createVmInterface("nic1")
+		result := FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{iface})
+		Expect(result).To(ConsistOf(iface))
+	})
+	It("when there are multiple interface, some with name some without", func() {
+		nic1 := createVmInterface("nic1")
+		nic2 := createVmInterface("")
+		nic3 := createVmInterface("nic3")
+		nic4 := createVmInterface("")
+		result := FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nic1, nic2, nic3, nic4})
+		Expect(result).To(ConsistOf(nic1, nic3))
+	})
+})
+
 func createDefaultNetwork(name string) v1.Network {
 	return v1.Network{
 		NetworkSource: v1.NetworkSource{

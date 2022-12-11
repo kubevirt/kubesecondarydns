@@ -113,13 +113,11 @@ func (zoneFileCache *ZoneFileCache) updateVMIRecords(namespacedName k8stypes.Nam
 func buildARecordsArr(name string, namespace string, interfaces []v1.VirtualMachineInstanceNetworkInterface) []string {
 	var recordsArr []string
 	for _, iface := range interfaces {
-		if iface.Name != "" {
-			IPs := iface.IPs
-			for _, IP := range IPs {
-				if net.IsIPv4String(IP) {
-					recordsArr = append(recordsArr, generateARecord(name, namespace, iface.Name, IP))
-					break
-				}
+		IPs := iface.IPs
+		for _, IP := range IPs {
+			if net.IsIPv4String(IP) {
+				recordsArr = append(recordsArr, generateARecord(name, namespace, iface.Name, IP))
+				break
 			}
 		}
 	}

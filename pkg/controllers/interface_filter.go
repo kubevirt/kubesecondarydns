@@ -30,3 +30,13 @@ func getDefaultNetwork(networks []v1.Network) *v1.Network {
 func isDefaultNetwork(net v1.Network) bool {
 	return net.Pod != nil || (net.Multus != nil && net.Multus.Default)
 }
+
+func FilterNamedInterfaces(ifaces []v1.VirtualMachineInstanceNetworkInterface) []v1.VirtualMachineInstanceNetworkInterface {
+	var secondaryInterfaces []v1.VirtualMachineInstanceNetworkInterface
+	for _, iface := range ifaces {
+		if iface.Name != "" {
+			secondaryInterfaces = append(secondaryInterfaces, iface)
+		}
+	}
+	return secondaryInterfaces
+}
