@@ -34,7 +34,7 @@ if [[ "$KUBEVIRT_PROVIDER" != external ]]; then
     if [[ "${DEPLOY_CNAO}" = "true" ]]; then
         export KUBVIRT_WITH_CNAO_SKIP_CONFIG=true
     fi
-    
+
     $(cluster::path)/cluster-up/up.sh
 
     if [[ "${DEPLOY_CNAO}" = "true" ]]; then
