@@ -1,10 +1,12 @@
-package controllers
+package controllers_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	v1 "kubevirt.io/api/core/v1"
+
+	"github.com/kubevirt/kubesecondarydns/pkg/controllers"
 )
 
 var _ = Describe("FilterMultusNonDefaultInterfaces", func() {
@@ -13,23 +15,23 @@ var _ = Describe("FilterMultusNonDefaultInterfaces", func() {
 	const nonDefaultName2 = "non default2"
 
 	It("when interfaces and networks lists are nil", func() {
-		Expect(FilterMultusNonDefaultInterfaces(nil, nil)).To(BeEmpty())
+		Expect(controllers.FilterMultusNonDefaultInterfaces(nil, nil)).To(BeEmpty())
 	})
 	It("when interfaces and networks lists are empty", func() {
-		Expect(FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{}, []v1.Network{})).To(BeEmpty())
+		Expect(controllers.FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{}, []v1.Network{})).To(BeEmpty())
 	})
 	It("when there is only default network", func() {
-		Expect(FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface(defaultName)}, []v1.Network{createDefaultNetwork(defaultName)})).To(BeEmpty())
+		Expect(controllers.FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface(defaultName)}, []v1.Network{createDefaultNetwork(defaultName)})).To(BeEmpty())
 	})
 	It("when there is a non default interface", func() {
 		nonDefaultInterface := createVmInterface(nonDefaultName)
-		result := FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nonDefaultInterface, createVmInterface(defaultName)}, []v1.Network{createDefaultNetwork(defaultName), createMultusNonDefaultNetwork(nonDefaultName)})
+		result := controllers.FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nonDefaultInterface, createVmInterface(defaultName)}, []v1.Network{createDefaultNetwork(defaultName), createMultusNonDefaultNetwork(nonDefaultName)})
 		Expect(result).To(ConsistOf(nonDefaultInterface))
 	})
 	It("when there is default network and multiple non default interface", func() {
 		nonDefaultInterface := createVmInterface(nonDefaultName)
 		nonDefaultInterface2 := createVmInterface(nonDefaultName2)
-		result := FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface(defaultName), nonDefaultInterface, nonDefaultInterface2}, []v1.Network{createDefaultNetwork(defaultName)})
+		result := controllers.FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface(defaultName), nonDefaultInterface, nonDefaultInterface2}, []v1.Network{createDefaultNetwork(defaultName)})
 		Expect(result).To(ConsistOf(nonDefaultInterface, nonDefaultInterface2))
 	})
 	It("when there is a multus default interface", func() {
@@ -41,30 +43,30 @@ var _ = Describe("FilterMultusNonDefaultInterfaces", func() {
 			Name: defaultName,
 		}
 
-		result := FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nonDefaultInterface, nonDefaultInterface2}, []v1.Network{multusDefaultNetwork, createMultusNonDefaultNetwork(nonDefaultName), createMultusNonDefaultNetwork(nonDefaultName2)})
+		result := controllers.FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nonDefaultInterface, nonDefaultInterface2}, []v1.Network{multusDefaultNetwork, createMultusNonDefaultNetwork(nonDefaultName), createMultusNonDefaultNetwork(nonDefaultName2)})
 		Expect(result).To(ConsistOf(nonDefaultInterface, nonDefaultInterface2))
 	})
 	It("when there is no default network", func() {
 		nonDefaultInterface := createVmInterface(nonDefaultName)
 		nonDefaultInterface2 := createVmInterface(nonDefaultName2)
-		result := FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nonDefaultInterface, nonDefaultInterface2}, []v1.Network{createMultusNonDefaultNetwork(nonDefaultName), createMultusNonDefaultNetwork(nonDefaultName2)})
+		result := controllers.FilterMultusNonDefaultInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nonDefaultInterface, nonDefaultInterface2}, []v1.Network{createMultusNonDefaultNetwork(nonDefaultName), createMultusNonDefaultNetwork(nonDefaultName2)})
 		Expect(result).To(ConsistOf(nonDefaultInterface, nonDefaultInterface2))
 	})
 })
 
 var _ = Describe("FilterInterfacesWithNoName", func() {
 	It("when interfaces list is nil", func() {
-		Expect(FilterNamedInterfaces(nil)).To(BeEmpty())
+		Expect(controllers.FilterNamedInterfaces(nil)).To(BeEmpty())
 	})
 	It("when interface list is empty", func() {
-		Expect(FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{})).To(BeEmpty())
+		Expect(controllers.FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{})).To(BeEmpty())
 	})
 	It("when there is one interface without a name", func() {
-		Expect(FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface("")})).To(BeEmpty())
+		Expect(controllers.FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{createVmInterface("")})).To(BeEmpty())
 	})
 	It("when there is one inteface with a name", func() {
 		iface := createVmInterface("nic1")
-		result := FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{iface})
+		result := controllers.FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{iface})
 		Expect(result).To(ConsistOf(iface))
 	})
 	It("when there are multiple interface, some with name some without", func() {
@@ -72,7 +74,7 @@ var _ = Describe("FilterInterfacesWithNoName", func() {
 		nic2 := createVmInterface("")
 		nic3 := createVmInterface("nic3")
 		nic4 := createVmInterface("")
-		result := FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nic1, nic2, nic3, nic4})
+		result := controllers.FilterNamedInterfaces([]v1.VirtualMachineInstanceNetworkInterface{nic1, nic2, nic3, nic4})
 		Expect(result).To(ConsistOf(nic1, nic3))
 	})
 })
