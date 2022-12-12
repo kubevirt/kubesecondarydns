@@ -19,15 +19,10 @@ set -ex pipefail
 export DEPLOY_CNAO=${DEPLOY_CNAO:-true}
 export DEPLOY_KUBEVIRT=${DEPLOY_KUBEVIRT:-true}
 
-function getLatestPatchVersion {
-  local major_minors=$1
-  curl -s https://api.github.com/repos/kubevirt/kubevirt/releases | grep .tag_name | grep ${major_minors} | sort -V | tail -1 | awk -F':' '{print $2}' | sed 's/,//' | xargs
-}
-
 source ./cluster/cluster.sh
 
-#use kubevirt latest z stream release
-KUBEVIRT_VERSION=$(getLatestPatchVersion v0.59)
+# use kubevirt latest stable release
+KUBEVIRT_VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt/releases | grep tag_name | grep -v -- - | sort -V | tail -1 | awk -F':' '{print $2}' | sed 's/,//' | xargs)
 cluster::install
 
 if [[ "$KUBEVIRT_PROVIDER" != external ]]; then
