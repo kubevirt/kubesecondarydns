@@ -24,7 +24,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 	Describe("cached zone file initialization", func() {
 		const (
 			headerDefault   = "$ORIGIN vm. \n$TTL 3600 \n@ IN SOA ns.vm. email.vm. (0 3600 3600 1209600 3600)\n"
-			headerCustomFmt = "$ORIGIN vm.%s. \n$TTL 3600 \n@ IN SOA ns.vm.%s. email.vm.%s. (0 3600 3600 1209600 3600)\nIN NS ns.vm.%s.\nIN A %s\n"
+			headerCustomFmt = "$ORIGIN vm.%s. \n$TTL 3600 \n@ IN SOA ns.vm.%s. email.vm.%s. (0 3600 3600 1209600 3600)\nIN NS ns.vm.%s.\nns IN A %s\n"
 		)
 
 		var (
