@@ -13,5 +13,5 @@ if [ -z $NAMESPACE ]; then
   exit 1
 fi
 
-${KUBECTL} expose -n ${NAMESPACE} deployment/secondary-dns --name=dns-nodeport --type=NodePort --port=31111 --target-port=53 --protocol='UDP'
+${KUBECTL} expose -n ${NAMESPACE} deployment/secondary-dns --name=dns-nodeport --type=NodePort --port=31111 --target-port=5353 --protocol='UDP'
 ${KUBECTL} patch -n ${NAMESPACE} service/dns-nodeport --type='json' --patch='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value":31111}]'
