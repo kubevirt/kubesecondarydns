@@ -18,6 +18,7 @@ set -ex pipefail
 
 export DEPLOY_CNAO=${DEPLOY_CNAO:-true}
 export DEPLOY_KUBEVIRT=${DEPLOY_KUBEVIRT:-true}
+export KUBEVIRT_PSA=${KUBEVIRT_PSA:-false}
 
 source ./cluster/cluster.sh
 

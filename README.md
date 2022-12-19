@@ -2,12 +2,12 @@
 DNS for KubeVirt VirtualMachines secondary interfaces
 
 ## Prerequisites
-1. The KubeSecondaryDNS Deployment should be reachable from outside the cluster.  
+1. The KubeSecondaryDNS Deployment which listens on port 5353 should be reachable from outside the cluster.  
 It can be exposed using NodePort, Load Balancer, Ingress or any other methodology.  
 The IP to reach the KubeSecondaryDNS from outside the cluster would be called from now on  
 "KubeSecondaryDNS public IP".
 2. The secondary interfaces IPs must appear on the VMI status.  
-For this IPs should be either declared statically (i.e with CNI) or to have a guest agent installed.
+For this, IPs should be either declared statically (i.e with CNI) or to have a guest agent installed.
 3. Kubevirt must be installed, else the plugin would have an error.
 4. If necessary, establish connectivity to KubeSecondaryDNS public IP via a relevant DNS entity that is used to
 reach the authoritative KubeSecondaryDNS server, such as DNSResolver, TLD NameServer, etc.
