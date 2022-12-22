@@ -31,6 +31,7 @@ import (
 
 	v1 "kubevirt.io/api/core/v1"
 
+	"github.com/kubevirt/kubesecondarydns/pkg/controllers/internal/filter"
 	"github.com/kubevirt/kubesecondarydns/pkg/zonemgr"
 )
 
@@ -54,9 +55,9 @@ func (r *VirtualMachineInstanceReconciler) Reconcile(ctx context.Context, reques
 		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
 	}
-	filteredInterfaces := FilterMultusNonDefaultInterfaces(vmi.Status.Interfaces, vmi.Spec.Networks)
+	filteredInterfaces := filter.FilterMultusNonDefaultInterfaces(vmi.Status.Interfaces, vmi.Spec.Networks)
 	// The interface/network name is used to build the FQDN, therefore, interfaces reported without a name are filtered out
-	filteredInterfaces = FilterNamedInterfaces(filteredInterfaces)
+	filteredInterfaces = filter.FilterNamedInterfaces(filteredInterfaces)
 	err = r.ZoneManager.UpdateZone(request.NamespacedName, filteredInterfaces)
 
 	return ctrl.Result{}, err

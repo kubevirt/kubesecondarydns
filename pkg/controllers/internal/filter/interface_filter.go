@@ -1,4 +1,4 @@
-package controllers
+package filter
 
 import (
 	v1 "kubevirt.io/api/core/v1"
