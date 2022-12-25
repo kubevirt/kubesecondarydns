@@ -26,7 +26,7 @@ var _ = Describe("disk zone file maintenance", func() {
 	})
 
 	testFileFunc := func(expectedFileContent string) {
-		Expect(zoneFile.writeFile(expectedFileContent)).To(Succeed())
+		Expect(zoneFile.WriteFile(expectedFileContent)).To(Succeed())
 		content, err := os.ReadFile(zoneFileName)
 		Expect(err).To(BeNil())
 		Expect(string(content)).To(Equal(expectedFileContent))

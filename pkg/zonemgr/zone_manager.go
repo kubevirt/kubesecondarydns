@@ -59,8 +59,8 @@ func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, i
 		return errors.New("VM namespace is empty")
 	}
 
-	if isUpdated := zoneMgr.zoneFileCache.updateVMIRecords(namespacedName, interfaces); isUpdated {
-		return zoneMgr.zoneFile.writeFile(zoneMgr.zoneFileCache.content)
+	if isUpdated := zoneMgr.zoneFileCache.UpdateVMIRecords(namespacedName, interfaces); isUpdated {
+		return zoneMgr.zoneFile.WriteFile(zoneMgr.zoneFileCache.Content)
 	}
 
 	return nil

@@ -22,7 +22,7 @@ func NewZoneFile(fileName string) *ZoneFile {
 	}
 }
 
-func (zoneFile *ZoneFile) writeFile(content string) (err error) {
+func (zoneFile *ZoneFile) WriteFile(content string) (err error) {
 	return os.WriteFile(zoneFile.zoneFileFullName, []byte(content), zoneFilePerm)
 }
 
