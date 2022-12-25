@@ -1,4 +1,4 @@
-package zonemgr_test
+package zone_file_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestZonemgr(t *testing.T) {
+func TestZoneFile(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Zone manager Suite")
+	RunSpecs(t, "Zone File Suite")
 }

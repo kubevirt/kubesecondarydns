@@ -1,4 +1,4 @@
-package zonemgr
+package zone_file
 
 import (
 	"errors"
@@ -16,10 +16,15 @@ type ZoneFile struct {
 	zoneFileFullName string
 }
 
-func NewZoneFile(fileName string) *ZoneFile {
+func NewZoneFile(fileName string) ZoneFileInterface {
 	return &ZoneFile{
 		zoneFileFullName: fileName,
 	}
+}
+
+type ZoneFileInterface interface {
+	WriteFile(string) error
+	ReadSoaSerial() (*int, error)
 }
 
 func (zoneFile *ZoneFile) WriteFile(content string) (err error) {
