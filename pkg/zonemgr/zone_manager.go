@@ -2,17 +2,18 @@ package zonemgr
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	k8stypes "k8s.io/apimachinery/pkg/types"
-
 	v1 "kubevirt.io/api/core/v1"
 )
 
 const (
-	zoneFileName       = "/zones/db."
 	envVarDomain       = "DOMAIN"
 	envVarNameServerIP = "NAME_SERVER_IP"
+	zoneFileNamePrefix = "/zones/db."
+	domainDefault      = "vm"
 )
 
 type SecIfaceData struct {
@@ -27,19 +28,27 @@ type ZoneManager struct {
 	zoneFile      *ZoneFile
 }
 
-func NewZoneManager() *ZoneManager {
+func NewZoneManager() (*ZoneManager, error) {
 	zoneMgr := &ZoneManager{}
-	zoneMgr.prepare()
-	return zoneMgr
+	err := zoneMgr.prepare()
+	return zoneMgr, err
 }
 
-func (zoneMgr *ZoneManager) prepare() {
-	domain := os.Getenv(envVarDomain)
+func (zoneMgr *ZoneManager) prepare() error {
+	domain := domainDefault
 	nameServerIP := os.Getenv(envVarNameServerIP)
+	if customDomain := os.Getenv(envVarDomain); customDomain != "" {
+		domain = fmt.Sprintf("%s.%s", domain, customDomain)
+	}
+	zoneFileName := zoneFileNamePrefix + domain
+	zoneMgr.zoneFile = NewZoneFile(zoneFileName)
 
-	zoneMgr.zoneFileCache = NewZoneFileCache(nameServerIP, domain)
-
-	zoneMgr.zoneFile = NewZoneFile(zoneFileName + zoneMgr.zoneFileCache.domain)
+	soaSerial, err := zoneMgr.zoneFile.ReadSoaSerial()
+	if err != nil {
+		return err
+	}
+	zoneMgr.zoneFileCache = NewZoneFileCache(nameServerIP, domain, soaSerial)
+	return nil
 }
 
 func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) error {

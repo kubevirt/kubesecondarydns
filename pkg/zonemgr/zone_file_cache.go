@@ -18,7 +18,6 @@ const (
 	expire  = "1209600" // 2 weeks (seconds) - how long a nameserver should wait prior to considering data from a secondary zone invalid and stop answering queries for that zone
 	ttl     = "3600"    // 1 hour (seconds) - the duration that the record may be cached by any resolver
 
-	domainDefault     = "vm"
 	nameServerDefault = "ns"
 	adminEmailDefault = "email"
 )
@@ -40,10 +39,16 @@ type ZoneFileCache struct {
 	vmiRecordsMap map[string][]string
 }
 
-func NewZoneFileCache(nameServerIP string, domain string) *ZoneFileCache {
+func NewZoneFileCache(nameServerIP string, domain string, soaSerial *int) *ZoneFileCache {
+	soaSerialInt := 0
+	if soaSerial != nil {
+		soaSerialInt = *soaSerial
+	}
+
 	zoneFileCache := &ZoneFileCache{
 		nameServerIP: nameServerIP,
 		domain:       domain,
+		soaSerial:    soaSerialInt,
 	}
 	zoneFileCache.prepare()
 	return zoneFileCache
@@ -53,18 +58,11 @@ func (zoneFileCache *ZoneFileCache) prepare() {
 	zoneFileCache.initCustomFields()
 	zoneFileCache.generateHeaderPrefix()
 	zoneFileCache.generateHeaderSuffix()
-	zoneFileCache.soaSerial = 0
 	zoneFileCache.header = zoneFileCache.generateHeader()
-	zoneFileCache.content = zoneFileCache.header
 	zoneFileCache.vmiRecordsMap = make(map[string][]string)
 }
 
 func (zoneFileCache *ZoneFileCache) initCustomFields() {
-	if zoneFileCache.domain == "" {
-		zoneFileCache.domain = domainDefault
-	} else {
-		zoneFileCache.domain = fmt.Sprintf("%s.%s", domainDefault, zoneFileCache.domain)
-	}
 	zoneFileCache.nameServerName = fmt.Sprintf("%s.%s", nameServerDefault, zoneFileCache.domain)
 	zoneFileCache.adminEmail = fmt.Sprintf("%s.%s", adminEmailDefault, zoneFileCache.domain)
 }

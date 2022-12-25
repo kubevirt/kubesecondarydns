@@ -66,7 +66,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	zoneManager := zonemgr.NewZoneManager()
+	zoneManager, err := zonemgr.NewZoneManager()
+	if err != nil {
+		setupLog.Error(err, "unable to create zone manager")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.VirtualMachineInstanceReconciler{
 		Client:      mgr.GetClient(),
 		Log:         ctrl.Log.WithName("controllers").WithName("VirtualMachineInstance"),
