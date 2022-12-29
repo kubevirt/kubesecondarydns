@@ -7,6 +7,9 @@ import (
 
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	v1 "kubevirt.io/api/core/v1"
+
+	"github.com/kubevirt/kubesecondarydns/pkg/zonemgr/internal/zone-file"
+	"github.com/kubevirt/kubesecondarydns/pkg/zonemgr/internal/zone-file-cache"
 )
 
 const (
@@ -24,30 +27,36 @@ type SecIfaceData struct {
 }
 
 type ZoneManager struct {
-	zoneFileCache *ZoneFileCache
-	zoneFile      *ZoneFile
+	zoneFileCache *zone_file_cache.ZoneFileCache
+	zoneFile      zone_file.ZoneFileInterface
 }
 
 func NewZoneManager() (*ZoneManager, error) {
+	return NewZoneManagerWithParams(zone_file_cache.NewZoneFileCache, zone_file.NewZoneFile)
+}
+
+func NewZoneManagerWithParams(newZoneFileCache func(string, string, *int) *zone_file_cache.ZoneFileCache,
+	newZoneFile func(string) zone_file.ZoneFileInterface) (*ZoneManager, error) {
 	zoneMgr := &ZoneManager{}
-	err := zoneMgr.prepare()
+	err := zoneMgr.prepare(newZoneFileCache, newZoneFile)
 	return zoneMgr, err
 }
 
-func (zoneMgr *ZoneManager) prepare() error {
+func (zoneMgr *ZoneManager) prepare(newZoneFileCache func(string, string, *int) *zone_file_cache.ZoneFileCache,
+	newZoneFile func(string) zone_file.ZoneFileInterface) error {
 	domain := domainDefault
 	nameServerIP := os.Getenv(envVarNameServerIP)
 	if customDomain := os.Getenv(envVarDomain); customDomain != "" {
 		domain = fmt.Sprintf("%s.%s", domain, customDomain)
 	}
 	zoneFileName := zoneFileNamePrefix + domain
-	zoneMgr.zoneFile = NewZoneFile(zoneFileName)
+	zoneMgr.zoneFile = newZoneFile(zoneFileName)
 
 	soaSerial, err := zoneMgr.zoneFile.ReadSoaSerial()
 	if err != nil {
 		return err
 	}
-	zoneMgr.zoneFileCache = NewZoneFileCache(nameServerIP, domain, soaSerial)
+	zoneMgr.zoneFileCache = newZoneFileCache(nameServerIP, domain, soaSerial)
 	return nil
 }
 
@@ -59,8 +68,8 @@ func (zoneMgr *ZoneManager) UpdateZone(namespacedName k8stypes.NamespacedName, i
 		return errors.New("VM namespace is empty")
 	}
 
-	if isUpdated := zoneMgr.zoneFileCache.updateVMIRecords(namespacedName, interfaces); isUpdated {
-		return zoneMgr.zoneFile.writeFile(zoneMgr.zoneFileCache.content)
+	if isUpdated := zoneMgr.zoneFileCache.UpdateVMIRecords(namespacedName, interfaces); isUpdated {
+		return zoneMgr.zoneFile.WriteFile(zoneMgr.zoneFileCache.Content)
 	}
 
 	return nil

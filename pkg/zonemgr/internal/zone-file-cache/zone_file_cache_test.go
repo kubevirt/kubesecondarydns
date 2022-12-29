@@ -1,9 +1,10 @@
-package zonemgr
+package zone_file_cache
 
 import (
-	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"fmt"
 	"sort"
 	"strings"
 
@@ -84,7 +85,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 
 		validateUpdateFunc := func(vmiName, vmiNamespace string, newInterfaces []v1.VirtualMachineInstanceNetworkInterface,
 			expectedIsUpdated bool, expectedRecords string, expectedSoaSerial int) {
-			isUpdated := zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: vmiNamespace, Name: vmiName}, newInterfaces)
+			isUpdated := zoneFileCache.UpdateVMIRecords(k8stypes.NamespacedName{Namespace: vmiNamespace, Name: vmiName}, newInterfaces)
 			Expect(isUpdated).To(Equal(expectedIsUpdated))
 			Expect(sortRecords(zoneFileCache.aRecords)).To(Equal(sortRecords(expectedRecords)))
 			Expect(zoneFileCache.soaSerial).To(Equal(expectedSoaSerial))
@@ -119,7 +120,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 			It("should init SOA serial with the existing value", func() {
 				soaSerial := 5
 				zoneFileCache = NewZoneFileCache("", "", &soaSerial)
-				zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
+				zoneFileCache.UpdateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}})
 				Expect(zoneFileCache.soaSerial).To(Equal(6))
 			})
@@ -128,7 +129,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 		When("interfaces records list contains single vmi", func() {
 			BeforeEach(func() {
 				zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
-				isUpdated := zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
+				isUpdated := zoneFileCache.UpdateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}, {IPs: []string{nic2IP}, Name: nic2Name}})
 				Expect(isUpdated).To(BeTrue())
 			})
@@ -177,10 +178,10 @@ var _ = Describe("cached zone file content maintenance", func() {
 		When("interfaces records list contains multiple vmis", func() {
 			BeforeEach(func() {
 				zoneFileCache = NewZoneFileCache(nameServerIP, domain, nil)
-				isUpdated := zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
+				isUpdated := zoneFileCache.UpdateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi1Name},
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}, {IPs: []string{nic2IP}, Name: nic2Name}})
 				Expect(isUpdated).To(BeTrue())
-				isUpdated = zoneFileCache.updateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi2Name},
+				isUpdated = zoneFileCache.UpdateVMIRecords(k8stypes.NamespacedName{Namespace: namespace1, Name: vmi2Name},
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}, {IPs: []string{nic2IP}, Name: nic2Name}})
 				Expect(isUpdated).To(BeTrue())
 			})

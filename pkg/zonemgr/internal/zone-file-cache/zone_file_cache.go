@@ -1,4 +1,4 @@
-package zonemgr
+package zone_file_cache
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ type ZoneFileCache struct {
 
 	header   string
 	aRecords string
-	content  string
+	Content  string
 
 	vmiRecordsMap map[string][]string
 }
@@ -85,7 +85,7 @@ func (zoneFileCache *ZoneFileCache) generateHeader() string {
 	return zoneFileCache.headerPref + strconv.Itoa(zoneFileCache.soaSerial) + zoneFileCache.headerSuf
 }
 
-func (zoneFileCache *ZoneFileCache) updateVMIRecords(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) bool {
+func (zoneFileCache *ZoneFileCache) UpdateVMIRecords(namespacedName k8stypes.NamespacedName, interfaces []v1.VirtualMachineInstanceNetworkInterface) bool {
 	key := fmt.Sprintf("%s_%s", namespacedName.Name, namespacedName.Namespace)
 	isUpdated := false
 
@@ -143,5 +143,5 @@ func (zoneFileCache *ZoneFileCache) updateContent() {
 	zoneFileCache.header = zoneFileCache.generateHeader()
 	zoneFileCache.aRecords = zoneFileCache.generateARecords()
 
-	zoneFileCache.content = zoneFileCache.header + zoneFileCache.aRecords
+	zoneFileCache.Content = zoneFileCache.header + zoneFileCache.aRecords
 }
