@@ -114,6 +114,10 @@ spec:
           capabilities:
             drop: [ "ALL" ]
         image: registry:5000/kubevirt/kubesecondarydns:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 70Mi
         volumeMounts:
         - name: secdns-zones
           mountPath: /zones
