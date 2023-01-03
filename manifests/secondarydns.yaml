@@ -76,7 +76,7 @@ spec:
     spec:
       serviceAccountName: secondary
       securityContext:
-        runAsUser: 1000
+        runAsUser: 107
         runAsNonRoot: true
         seccompProfile:
           type: "RuntimeDefault"
