@@ -125,6 +125,7 @@ and that the plugin refreshes its database (1-2 minutes).
 Resolve the FQDN using this command:  
 `nslookup -port=31111 nic1.vmi-sec.secondary-test.vm 127.0.0.1`  
 Note: In this example `DOMAIN` is an empty string.
+When using OpenShift, see [OpenShift section](#deploying-on-openShift).
 
 Expected output:
 ```
@@ -204,6 +205,18 @@ spec:
         echo 'printed from cloud-init userdata'
     name: cloudinitdisk
 ```
+
+## Deploying on OpenShift
+
+In order to deploy KubeSecondaryDNS on openshift,
+enable [HCO deployKubeSecondaryDNS feature gate](https://github.com/kubevirt/hyperconverged-cluster-operator/blob/main/docs/cluster-configuration.md#deploykubesecondarydns-feature-gate)
+
+The OpenShift cluster name will be automatically propogated to the KSD pod.  
+This means that the FQDN suffix will end with `vm.<cluster_name>`  
+Fetching cluster name can be done using: `oc get dnses.config.openshift.io cluster -o json | jq .spec.baseDomain`
+
+Nameserver IP can be changed if needed.
+See [HCO KubeSecondaryDNS NameServerIP](https://github.com/kubevirt/hyperconverged-cluster-operator/blob/main/docs/cluster-configuration.md#kubesecondarydns-name-server-ip)
 
 ## High level design
 
