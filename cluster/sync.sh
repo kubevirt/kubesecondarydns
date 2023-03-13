@@ -50,5 +50,10 @@ pods_ready_wait() {
   fi
 }
 
+enable_psa_feature_gate() {
+  ./cluster/kubectl.sh apply -f ./hack/psa/kubevirt.yaml
+}
+
 pods_ready_wait
 make create-nodeport
+enable_psa_feature_gate
