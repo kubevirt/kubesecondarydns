@@ -114,17 +114,25 @@ func buildARecordsArr(name string, namespace string, interfaces []v1.VirtualMach
 		IPs := iface.IPs
 		for _, IP := range IPs {
 			if net.IsIPv4String(IP) {
-				recordsArr = append(recordsArr, generateARecord(name, namespace, iface.Name, IP))
+				recordsArr = append(recordsArr, generateIfaceARecord(name, namespace, iface.Name, IP))
 				break
 			}
 		}
 	}
 	sort.Strings(recordsArr)
+	if len(recordsArr) > 0 {
+		recordsArr = append(recordsArr, generateDefaultARecord(name, namespace, recordsArr[0]))
+	}
 	return recordsArr
 }
 
-func generateARecord(name string, namespace string, ifaceName string, ifaceIP string) string {
+func generateIfaceARecord(name string, namespace string, ifaceName string, ifaceIP string) string {
 	fqdn := fmt.Sprintf("%s.%s.%s", ifaceName, name, namespace)
+	return fmt.Sprintf("%s IN A %s\n", fqdn, ifaceIP)
+}
+
+func generateDefaultARecord(name string, namespace string, ifaceIP string) string {
+	fqdn := fmt.Sprintf("%s.%s", name, namespace)
 	return fmt.Sprintf("%s IN A %s\n", fqdn, ifaceIP)
 }
 
