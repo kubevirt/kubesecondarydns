@@ -63,7 +63,8 @@ var _ = Describe("cached zone file content maintenance", func() {
 			nic4IP     = "13.14.15.16"
 			IPv6       = "fe80::74c8:f2ff:fe5f:ff2b"
 
-			aRecordFmt = "%s.%s.%s IN A %s\n"
+			aRecordFmt        = "%s.%s.%s IN A %s\n"
+			defaultARecordFmt = "%s.%s IN A %s\n"
 
 			updated    = true
 			notUpdated = false
@@ -81,6 +82,11 @@ var _ = Describe("cached zone file content maintenance", func() {
 
 			aRecord_nic3_vm1_ns2 = fmt.Sprintf(aRecordFmt, nic3Name, vmi1Name, namespace2, nic3IP)
 			aRecord_nic4_vm1_ns2 = fmt.Sprintf(aRecordFmt, nic4Name, vmi1Name, namespace2, nic4IP)
+
+			defARecord_nic1_vm1_ns1 = fmt.Sprintf(defaultARecordFmt, vmi1Name, namespace1, nic1IP)
+			defARecord_nic1_vm2_ns1 = fmt.Sprintf(defaultARecordFmt, vmi2Name, namespace1, nic1IP)
+			defARecord_nic3_vm2_ns1 = fmt.Sprintf(defaultARecordFmt, vmi2Name, namespace1, nic3IP)
+			defARecord_nic3_vm1_ns2 = fmt.Sprintf(defaultARecordFmt, vmi1Name, namespace2, nic3IP)
 		)
 
 		validateUpdateFunc := func(vmiName, vmiNamespace string, newInterfaces []v1.VirtualMachineInstanceNetworkInterface,
@@ -102,7 +108,7 @@ var _ = Describe("cached zone file content maintenance", func() {
 					namespace1,
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}},
 					updated,
-					aRecord_nic1_vm1_ns1,
+					aRecord_nic1_vm1_ns1+defARecord_nic1_vm1_ns1,
 					1,
 				),
 				Entry("when non existing vmi is deleted",
@@ -142,8 +148,10 @@ var _ = Describe("cached zone file content maintenance", func() {
 					updated,
 					aRecord_nic1_vm1_ns1+
 						aRecord_nic2_vm1_ns1+
+						defARecord_nic1_vm1_ns1+
 						aRecord_nic3_vm2_ns1+
-						aRecord_nic4_vm2_ns1,
+						aRecord_nic4_vm2_ns1+
+						defARecord_nic3_vm2_ns1,
 					2,
 				),
 				Entry("when existing vmi is deleted",
@@ -160,7 +168,8 @@ var _ = Describe("cached zone file content maintenance", func() {
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP}, Name: nic1Name}, {IPs: []string{nic4IP}, Name: nic4Name}},
 					updated,
 					aRecord_nic1_vm1_ns1+
-						aRecord_nic4_vm1_ns1,
+						aRecord_nic4_vm1_ns1+
+						defARecord_nic1_vm1_ns1,
 					2,
 				),
 				Entry("when existing vmi is not changed but its interfaces order is changed",
@@ -169,7 +178,8 @@ var _ = Describe("cached zone file content maintenance", func() {
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic2IP}, Name: nic2Name}, {IPs: []string{nic1IP}, Name: nic1Name}},
 					notUpdated,
 					aRecord_nic1_vm1_ns1+
-						aRecord_nic2_vm1_ns1,
+						aRecord_nic2_vm1_ns1+
+						defARecord_nic1_vm1_ns1,
 					1,
 				),
 			)
@@ -197,7 +207,10 @@ var _ = Describe("cached zone file content maintenance", func() {
 						aRecord_nic1_vm2_ns1+
 						aRecord_nic2_vm2_ns1+
 						aRecord_nic3_vm1_ns2+
-						aRecord_nic4_vm1_ns2,
+						aRecord_nic4_vm1_ns2+
+						defARecord_nic1_vm1_ns1+
+						defARecord_nic1_vm2_ns1+
+						defARecord_nic3_vm1_ns2,
 					3,
 				),
 				Entry("when existing vmi is deleted",
@@ -206,7 +219,8 @@ var _ = Describe("cached zone file content maintenance", func() {
 					nil,
 					updated,
 					aRecord_nic1_vm2_ns1+
-						aRecord_nic2_vm2_ns1,
+						aRecord_nic2_vm2_ns1+
+						defARecord_nic1_vm2_ns1,
 					3,
 				),
 				Entry("when existing vmi interfaces list is changed",
@@ -216,8 +230,10 @@ var _ = Describe("cached zone file content maintenance", func() {
 					updated,
 					aRecord_nic1_vm1_ns1+
 						aRecord_nic4_vm1_ns1+
+						defARecord_nic1_vm1_ns1+
 						aRecord_nic1_vm2_ns1+
-						aRecord_nic2_vm2_ns1,
+						aRecord_nic2_vm2_ns1+
+						defARecord_nic1_vm2_ns1,
 					3,
 				),
 				Entry("when existing vmi is not changed but its interfaces order is changed",
@@ -228,7 +244,9 @@ var _ = Describe("cached zone file content maintenance", func() {
 					aRecord_nic2_vm1_ns1+
 						aRecord_nic1_vm1_ns1+
 						aRecord_nic1_vm2_ns1+
-						aRecord_nic2_vm2_ns1,
+						aRecord_nic2_vm2_ns1+
+						defARecord_nic1_vm1_ns1+
+						defARecord_nic1_vm2_ns1,
 					2,
 				),
 			)
@@ -246,7 +264,8 @@ var _ = Describe("cached zone file content maintenance", func() {
 					[]v1.VirtualMachineInstanceNetworkInterface{{IPs: []string{nic1IP, IPv6}, Name: nic1Name}, {IPs: []string{nic2IP, IPv6}, Name: nic2Name}},
 					updated,
 					aRecord_nic1_vm1_ns1+
-						aRecord_nic2_vm1_ns1,
+						aRecord_nic2_vm1_ns1+
+						defARecord_nic1_vm1_ns1,
 					1,
 				),
 				Entry("vmi interfaces contain IPv6 only",
