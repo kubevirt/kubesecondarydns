@@ -14,7 +14,7 @@
 
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.25'}
 export KUBEVIRT_NUM_NODES=1
-export KUBEVIRTCI_TAG='2212161203-bcbedfe'
+export KUBEVIRTCI_TAG='2306031446-398ee73'
 
 KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
 # The CLUSTER_PATH var is used in cluster folder and points to the _kubevirtci where the cluster is deployed from.
