@@ -76,7 +76,7 @@ func (zoneFileCache *ZoneFileCache) generateHeaderSuffix() {
 	zoneFileCache.headerSuf = fmt.Sprintf(" %s %s %s %s)\n", refresh, retry, expire, ttl)
 
 	if zoneFileCache.nameServerIP != "" {
-		zoneFileCache.headerSuf += fmt.Sprintf("IN NS %s.\n", zoneFileCache.nameServerName)
+		zoneFileCache.headerSuf += fmt.Sprintf("@ IN NS %s.\n", zoneFileCache.nameServerName)
 		zoneFileCache.headerSuf += fmt.Sprintf("%s IN A %s\n", nameServerDefault, zoneFileCache.nameServerIP)
 	}
 }
