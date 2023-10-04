@@ -88,7 +88,7 @@ var _ = Describe("Virtual Machines Startup", func() {
 			var nslookupOutput []byte
 			Eventually(func() error {
 				var nslookupErr error
-				nslookupOutput, nslookupErr = exec.Command("nslookup", fmt.Sprintf("-port=%s", dnsPort), fmt.Sprintf("%s.%s.%s.%s.", interfaceName, vmiName, testNamespace, domain), dnsIP).CombinedOutput()
+				nslookupOutput, nslookupErr = nslookup(fmt.Sprintf("%s.%s.%s.%s.", interfaceName, vmiName, testNamespace, domain))
 				if nslookupErr != nil {
 					nslookupErr = fmt.Errorf("err: %v, output: %s", nslookupErr, nslookupOutput)
 				}
@@ -96,10 +96,29 @@ var _ = Describe("Virtual Machines Startup", func() {
 			}, time.Minute, pollingInterval).ShouldNot(HaveOccurred(), "nslookup failed")
 
 			By("Comparing the VirtualMachineInstance IP to the nslookup result")
-			Expect(nslookupOutput).To(ContainSubstring(fmt.Sprintf("Address: %s\n", vmiIp)), fmt.Sprintf("nsloookup doesn't return the VMI IP address - %s. nslookup output - %s", vmiIp, nslookupOutput))
+			verifyIPInOutput(nslookupOutput, vmiIp)
+
+			By("Invoking nslookup on the VMI default FQDN")
+			defaultNslookupOuput, err := nslookup(fmt.Sprintf("%s.%s.%s.", vmiName, testNamespace, domain))
+			Expect(err).ToNot(HaveOccurred(), "failed nslookup the default VMI FQDN")
+
+			By("Comparing the VirtualMachineInstance IP to the default nslookup result")
+			verifyIPInOutput(defaultNslookupOuput, vmiIp)
 		})
 	})
 })
+
+func verifyIPInOutput(output []byte, vmiIp string) bool {
+	return ExpectWithOffset(1, output).To(ContainSubstring(fmt.Sprintf("Address: %s\n", vmiIp)), fmt.Sprintf("nsloookup doesn't return the VMI IP address - %s. nslookup output - %s", vmiIp, output))
+}
+
+func nslookup(fqdn string) ([]byte, error) {
+	output, err := exec.Command("nslookup", fmt.Sprintf("-port=%s", dnsPort), fqdn, dnsIP).CombinedOutput()
+	if err != nil {
+		return output, fmt.Errorf("err: %v, output: %s", err, output)
+	}
+	return output, nil
+}
 
 func createNetworkAttachmentDefinition(namespace, name string) error {
 	nad := networkv1.NetworkAttachmentDefinition{
