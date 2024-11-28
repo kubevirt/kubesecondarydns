@@ -83,7 +83,7 @@ func addNoCloudDiskWitUserData(spec *v1.VirtualMachineInstanceSpec, data string)
 func CreateVmiObject(name string, namespace string, interfaces []v1.Interface, networks []v1.Network) *v1.VirtualMachineInstance {
 	vmi := getBaseVMI(randName(name))
 	vmi.Namespace = namespace
-	addContainerDisk(&vmi.Spec, "quay.io/kubevirt/cirros-container-disk-demo:devel")
+	addContainerDisk(&vmi.Spec, "quay.io/kubevirt/alpine-container-disk-demo:v1.4.0")
 	addNoCloudDiskWitUserData(&vmi.Spec, "#!/bin/sh\n\necho 'printed from cloud-init userdata'\n")
 	vmi.Spec.Domain.Devices.Interfaces = interfaces
 	vmi.Spec.Networks = networks
