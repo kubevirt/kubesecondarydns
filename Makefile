@@ -22,7 +22,7 @@ $(GO):
 
 # Run unit tests
 test: $(GO)
-	$(GO) test ./pkg/... -coverprofile cover.out
+	CGO_ENABLED=0 $(GO) test ./pkg/... -coverprofile cover.out
 
 # Run e2e tests
 functest: $(GO)
