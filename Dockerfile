@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM docker.io/library/golang:1.19 as builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.19 AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -13,8 +13,10 @@ RUN go mod download
 COPY main.go main.go
 COPY pkg/ pkg/
 
+ARG TARGETARCH
+
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH="${TARGETARCH}" go build -a -o manager main.go
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal
 WORKDIR /
