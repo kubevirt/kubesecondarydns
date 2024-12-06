@@ -18,7 +18,7 @@ ARG TARGETARCH
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH="${TARGETARCH}" go build -a -o manager main.go
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal
+FROM --platform=linux/$TARGETARCH registry.access.redhat.com/ubi8/ubi-minimal
 WORKDIR /
 COPY --from=builder /workspace/manager .
 
