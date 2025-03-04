@@ -1,7 +1,30 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "github>redhat-exd-rebuilds/renovate-config"
+  "baseBranches": ["main"],
+  "prConcurrentLimit": 3,
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "postUpdateOptions": ["gomodTidy"],
+  "labels": ["release-note-none"],
+  "extends": [":gitSignOff"],
+  "packageRules": [
+    {
+      "groupName": "all dependencies",
+      "groupSlug": "all",
+      "enabled": false,
+      "matchPackageNames": [
+        "*"
+      ]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "osvVulnerabilityAlerts": true,
+  "assigneesFromCodeOwners": true,
+  "separateMajorMinor": true,
+  "ignorePaths": [
+    "**/vendor/**"
   ]
 }
