@@ -19,13 +19,6 @@ const (
 	domainDefault      = "vm"
 )
 
-type SecIfaceData struct {
-	interfaceName string
-	interfaceIP   string
-	namespaceName string
-	vmName        string
-}
-
 type ZoneManager struct {
 	zoneFileCache *zone_file_cache.ZoneFileCache
 	zoneFile      zone_file.ZoneFileInterface

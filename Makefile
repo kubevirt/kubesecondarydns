@@ -47,7 +47,7 @@ push:
 	$(OCI_BIN) push ${TLS_SETTING} ${REGISTRY}/${IMG}:${IMAGE_TAG}
 
 lint: $(GO)
-	GOFLAGS=-mod=mod $(GO) run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2 --timeout 5m run
+	GOFLAGS=-mod=mod $(GO) run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6 --timeout 5m run
 
 cluster-up:
 	./cluster/up.sh

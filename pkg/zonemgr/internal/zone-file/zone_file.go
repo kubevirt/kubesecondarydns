@@ -10,7 +10,7 @@ import (
 
 const zoneFilePerm = 0644
 
-var soaSerialReg = regexp.MustCompile("SOA .*\\(([0-9]+) ")
+var soaSerialReg = regexp.MustCompile("SOA .*\\(([0-9]+) ") //nolint:gosimple
 
 type ZoneFile struct {
 	zoneFileFullName string
@@ -58,7 +58,7 @@ func (zoneFile *ZoneFile) ReadSoaSerial() (*int, error) {
 }
 
 func fetchSoaSerial(content string) (*int, error) {
-	if result := soaSerialReg.FindStringSubmatch(content); result != nil && len(result) > 0 {
+	if result := soaSerialReg.FindStringSubmatch(content); len(result) > 0 {
 		soaSerial := result[1]
 		if soaSerialInt, err := strconv.Atoi(soaSerial); err == nil {
 			return &soaSerialInt, nil
@@ -66,6 +66,6 @@ func fetchSoaSerial(content string) (*int, error) {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("failed to fetch SOA serial value from the zone file content: %s", content))
+		return nil, fmt.Errorf("failed to fetch SOA serial value from the zone file content: %s", content)
 	}
 }
