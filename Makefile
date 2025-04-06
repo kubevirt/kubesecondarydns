@@ -77,6 +77,9 @@ vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
 
+check: vendor fmt vet
+	./hack/check.sh
+
 .PHONY: \
 	test \
 	functest \
@@ -94,5 +97,6 @@ vendor: $(GO)
 	bump-kubevirtci \
 	whitespace \
 	whitespace-check \
-	vendor
+	vendor \
+	check
 
