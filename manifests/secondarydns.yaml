@@ -106,6 +106,7 @@ spec:
         - name: secdns-zones
           mountPath: /zones
           readOnly: true
+        terminationMessagePolicy: FallbackToLogsOnError
       - name: status-monitor
         securityContext:
           allowPrivilegeEscalation: false
@@ -130,6 +131,7 @@ spec:
               configMapKeyRef:
                 name: secondary-dns
                 key: NAME_SERVER_IP
+        terminationMessagePolicy: FallbackToLogsOnError
       priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 1
