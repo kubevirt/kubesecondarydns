@@ -181,3 +181,19 @@ spec:
           name: secondary-dns
       - name: secdns-zones
         emptyDir: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-secondary-dns
+  namespace: secondary
+spec:
+  podSelector:
+    matchLabels:
+      k8s-app: secondary-dns
+  policyTypes:
+  - Ingress
+  ingress:
+  - ports:
+    - protocol: UDP
+      port: dns
