@@ -27,6 +27,9 @@ make push
 make cluster-clean
 make deploy
 
+# Ensure the project network-polices are valid by installing an additional deny-all network-policy affecting the project namespace
+./hack/install-deny-all-net-pol.sh
+
 pods_ready_wait() {
   if [[ "$KUBEVIRT_PROVIDER" != external ]]; then
     echo "Waiting for non secondary-dns containers to be ready ..."
