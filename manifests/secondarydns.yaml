@@ -17,7 +17,7 @@ data:
         reload
         log
         health :8082
-        ready :8082
+        ready :8083
     }
 kind: ConfigMap
 metadata:
@@ -100,6 +100,9 @@ spec:
         - containerPort: 8082
           name: healthport
           protocol: TCP
+        - containerPort: 8083
+          name: readyport
+          protocol: TCP
         resources:
           requests:
             cpu: 100m
@@ -115,7 +118,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /ready
-            port: healthport
+            port: readyport
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
