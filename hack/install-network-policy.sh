@@ -54,9 +54,9 @@ spec:
           k8s-app: kube-dns
     ports:
     - protocol: TCP
-      port: dns-tcp
+      port: 53
     - protocol: UDP
-      port: dns
+      port: 53
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
