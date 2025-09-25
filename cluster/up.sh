@@ -28,6 +28,7 @@ cluster::install
 
 if [[ "$KUBEVIRT_PROVIDER" != external ]]; then
     if [[ "${DEPLOY_CNAO}" = "true" ]]; then
+        export KUBEVIRT_WITH_CNAO=true
         export KUBVIRT_WITH_CNAO_SKIP_CONFIG=true
     fi
 
