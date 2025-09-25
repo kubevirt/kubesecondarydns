@@ -20,6 +20,8 @@ export DEPLOY_CNAO=${DEPLOY_CNAO:-true}
 export DEPLOY_KUBEVIRT=${DEPLOY_KUBEVIRT:-true}
 export KUBEVIRT_PSA=${KUBEVIRT_PSA:-true}
 
+export KUBEVIRT_FLANNEL=true
+
 source ./cluster/cluster.sh
 
 # use kubevirt latest stable release
@@ -28,6 +30,7 @@ cluster::install
 
 if [[ "$KUBEVIRT_PROVIDER" != external ]]; then
     if [[ "${DEPLOY_CNAO}" = "true" ]]; then
+        export KUBEVIRT_WITH_CNAO=true
         export KUBVIRT_WITH_CNAO_SKIP_CONFIG=true
     fi
 
