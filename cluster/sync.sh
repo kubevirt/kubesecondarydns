@@ -20,7 +20,7 @@ source ./cluster/cluster.sh
 cluster::install
 
 registry_port=$(./cluster/cli.sh ports registry | tr -d '\r')
-export REGISTRY=localhost:$registry_port
+export REGISTRY=127.0.0.1:$registry_port
 
 make build
 make push
