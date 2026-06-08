@@ -2,7 +2,7 @@ module github.com/kubevirt/kubesecondarydns
 
 go 1.23.0
 
-toolchain go1.23.7
+toolchain go1.25.11
 
 require (
 	github.com/go-logr/logr v1.2.3
