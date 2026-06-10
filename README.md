@@ -142,7 +142,7 @@ Manifests:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: secondary-test
+  name: secondary-test-ralavi
 ---
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
